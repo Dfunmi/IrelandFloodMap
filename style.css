@@ -242,9 +242,9 @@
   background: white;
 }
 
-.about ul {
+.about ol {
   padding-top: 1rem;
-  text-align: center;
+  text-align: left;
   font-size: 1.25rem;
   line-height: 1.5;
 }
@@ -407,7 +407,7 @@
     }
     
     .home-msg p, .reports .reports-text p,
-    .about p, .about ul{
+    .about p, .about ol{
       font-size: 0.95rem;
     }
     .home-msg .video {
