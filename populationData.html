@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FloodAware - Wicklow Map</title>
+  <meta name="description" content="Stay informed about flood-prone areas and population impact." />
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+  <style>
+    #map {
+      height: 80vh;
+      width: 100%;
+      margin-top: 20px;
+    }
+    .legend, .info-box {
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      line-height: 18px;
+    }
+    .legend {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+    .legend i {
+      width: 18px;
+      height: 18px;
+      float: left;
+      margin-right: 8px;
+      opacity: 0.7;
+    }
+    .info-box {
+      position: absolute;
+      top: 80px;
+      right: 20px;
+      z-index: 1000;
+      max-width: 200px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="/" id="navbar-logo">FLOODAWARE</a>
+      <div class="mobile-toggle" id="toggle-btn">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </div>
+    </div>
+    <ul class="navbar-menu">
+        <li class="navbar-item">
+          <a href="/" class="navbar-links">Home</a>
+        </li>
+        <li class="navbar-item">
+          <a href="floodRiskMap.html" class="navbar-links">Flood Risk Map</a>
+        </li>
+        <li class="navbar-item">
+          <a href="populationData.html" class="navbar-links">Population Data</a>
+        </li>
+        <li class="navbar-item">
+          <a href="reports.html" class="navbar-links">Insights & Reports</a>
+        </li>
+        <li class="navbar-item">
+          <a href="about.html" class="navbar-links">About</a>
+        </li>
+        <li class="navbar-item">
+          <a href="contact.html" class="navbar-links">Contact</a>
+        </li>
+      </ul>
+  </nav>
+
+  <!-- Header -->
+  <header class="page-header">
+    <h1>Wicklow Flood & Population Map</h1>
+    <p>Explore flood-prone areas and population impacts across County Wicklow.</p>
+  </header>
+
+  <!-- Map Section -->
+  <div id="map"></div>
+  <div class="info-box">
+    <h3>County Wicklow</h3>
+    <p>Flood Risk vs. Population Density</p>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-left">
+        <h3>FLOODAWARE</h3>
+        <p>Empowering communities with flood risk <br/> and population data insights.</p>
+      </div>
+      <div class="footer-links">
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="floodRiskMap.html">Flood Risk Map</a></li>
+          <li><a href="populationData.html">Population Data</a></li>
+          <li><a href="reports.html">Insights & Reports</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-right">
+        <h4>Connect</h4>
+        <p>Email: support@floodaware.com</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 FLOODAWARE. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+  <script>
+    const wicklowBounds = L.latLngBounds(
+      L.latLng(52.5, -6.8),
+      L.latLng(53.3, -6.0)
+    );
+
+    const map = L.map('map', {
+      maxBounds: wicklowBounds,
+      maxZoom: 15,
+      minZoom: 9
+    }).setView([52.9, -6.4], 10);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      bounds: wicklowBounds
+    }).addTo(map);
+
+    const floodLayer = L.tileLayer.wms('https://webgis-oye.sytes.net/geoserver/web/wms', {
+      layers: 'webgisdb:flood_zone_b_cdp_2022_2028',
+      format: 'image/png',
+      transparent: true,
+      opacity: 0.7,
+      styles: 'flood_style'
+    }).addTo(map);
+
+    const popLayer = L.tileLayer.wms('https://webgis-oye.sytes.net/geoserver/web/wms', {
+      layers: 'webgisdb:saswithpopulation',
+      format: 'image/png',
+      transparent: true,
+      opacity: 0.5,
+      styles: 'population_style'
+    }).addTo(map);
+
+    const roadsLayer = L.tileLayer.wms('https://webgis-oye.sytes.net/geoserver/web/wms', {
+      layers: 'webgisdb:major_roads',
+      format: 'image/png',
+      transparent: true,
+      styles: 'line_style'
+    }).addTo(map);
+
+    const riversLayer = L.tileLayer.wms('https://webgis-oye.sytes.net/geoserver/web/wms', {
+      layers: 'webgisdb:rivers',
+      format: 'image/png',
+      transparent: true,
+      styles: 'river_style'
+    }).addTo(map);
+
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function () {
+      const div = L.DomUtil.create('div', 'legend');
+      div.innerHTML = `
+        <h4>Legend</h4>
+        <i style="background:#ff0000"></i> High Flood Risk<br>
+        <i style="background:#ff9999"></i> Medium Flood Risk<br>
+        <i style="background:#0000ff"></i> High Population<br>
+        <i style="background:#9999ff"></i> Low Population<br>
+        <i style="background:#000000; width:10px;"></i> Roads<br>
+        <i style="background:#0066cc; width:10px;"></i> Rivers
+      `;
+      return div;
+    };
+    legend.addTo(map);
+
+    L.rectangle([
+      [53.20, -6.12],
+      [53.22, -6.10]
+    ], {
+      color: "#ff0000",
+      weight: 3,
+      fillOpacity: 0,
+      dashArray: "5,5"
+    }).bindPopup("<b>Bray</b><br>High population + flood risk").addTo(map);
+
+    L.rectangle([
+      [52.7920, -6.1670],
+      [52.7960, -6.1620]
+    ], {
+      color: "#ff6600",
+      weight: 3,
+      fillOpacity: 0,
+      dashArray: "5,5"
+    }).bindPopup("<b>Arklow</b><br>High-risk zone").addTo(map);
+
+    L.rectangle([
+      [52.9760, -6.0350],
+      [52.9800, -6.0300]
+    ], {
+      color: "#0066ff",
+      weight: 3,
+      fillOpacity: 0,
+      dashArray: "5,5"
+    }).bindPopup("<b>Wicklow Town</b><br>Risk-prone area").addTo(map);
+  </script>
+</body>
+</html>
